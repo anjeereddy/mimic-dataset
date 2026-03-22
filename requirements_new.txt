@@ -1,0 +1,6 @@
+databricks-sdk
+PyYAML==6.0.2
+setuptools~=65.5.1
+pytest
+pytest-cov
+databricks-cli
