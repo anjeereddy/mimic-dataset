@@ -30,7 +30,7 @@ jobs:
         run: |
           python -m databricks fs cp \
           dist/*.whl \
-          dbfs:/Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
+          /Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
           --overwrite
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST}}
