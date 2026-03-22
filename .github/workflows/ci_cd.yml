@@ -21,10 +21,14 @@ jobs:
           pip install build
           python -m build
 
-      - name: Upload to Databricks Volume
+      - name: Install Databricks CLI
         run: |
           pip install databricks
-          databricks fs cp \
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Upload to Databricks Volume
+        run: |
+          python -m databricks fs cp \
           dist/*.whl \
           dbfs:/Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
           --overwrite
