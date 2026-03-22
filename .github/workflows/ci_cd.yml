@@ -28,7 +28,7 @@ jobs:
 
       - name: Upload to Databricks Volume
         run: |
-          python -m databricks fs cp \
+          databricks fs cp \
           dist/*.whl \
           /Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
           --overwrite
