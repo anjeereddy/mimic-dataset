@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="mimic_project_pipeline",
-    version="0.1.0",
+    version="0.1.1",
     install_requires=[
         "databricks-sdk",
         "PyYAML==6.0.2",
