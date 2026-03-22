@@ -3,7 +3,7 @@ from pathlib import Path
 source_root = Path(".")
 
 with(source_root / "requirements.txt").open(encoding = "utf-8") as f:
-    requirements = f.readLines()
+    requirements = f.readlines()
 
 setup(
     name="mimic project",
