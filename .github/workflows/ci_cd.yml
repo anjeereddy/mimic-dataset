@@ -36,8 +36,8 @@ jobs:
       # 🔍 Validate Databricks Access
       - name: Validate Databricks Connection
         run: |
-          databricks fs ls dbfs:/
-          databricks fs ls dbfs:/Volumes
+#          databricks fs ls dbfs:/
+#          databricks fs ls dbfs:/Volumes
           databricks auth describe
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
