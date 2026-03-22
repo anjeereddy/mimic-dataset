@@ -9,29 +9,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      # 🔨 Build WHL
       - name: Build wheel
         run: |
           pip install build
           python -m build
+          ls -l dist   # ✅ debug check
 
+      # 🚀 Install NEW Databricks CLI (RELIABLE WAY)
       - name: Install Databricks CLI
         run: |
-          pip install databricks
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks --version   # ✅ verify installation
 
+      # 🔍 Validate Databricks Access
+      - name: Validate Databricks Connection
+        run: |
+          databricks fs ls /
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # 📦 Upload WHL to Volume
       - name: Upload to Databricks Volume
         run: |
-          databricks fs cp \
-          dist/*.whl \
-          /Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
-          --overwrite
+          databricks fs cp dist/*.whl \
+            /Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
+            --overwrite
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST}}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN}}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
