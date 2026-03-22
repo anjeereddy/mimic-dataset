@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="mimic project",
+    name="mimic_project_pipeline",
     version="0.1.0",
     install_requires=[
         "databricks-sdk",
         "PyYAML==6.0.2",
-        "setuptools~=65.5.1",
+        "setuptools~= 78.1.1 ",
         "pytest",
         "pytest-cov",
         "databricks-cli",
