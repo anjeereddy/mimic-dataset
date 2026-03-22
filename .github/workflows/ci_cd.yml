@@ -37,6 +37,7 @@ jobs:
       - name: Validate Databricks Connection
         run: |
           databricks fs ls dbfs:/
+          databricks auth describe
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
