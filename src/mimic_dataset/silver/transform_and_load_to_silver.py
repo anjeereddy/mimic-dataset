@@ -1,11 +1,11 @@
 from pyspark.sql.functions import col, floor, datediff
-from mimic_dataset.utils.spark_session import get_spark
+from mimic_dataset.utils.globals import GlobalVariables as G
 
 def execute_silver():
 
     schema_name = 'mimic_catalog'
 
-    spark = _spark
+    spark = G.spark
 
     df = spark.table("""
                 {schema_name}.bronze.admissions_raw    
