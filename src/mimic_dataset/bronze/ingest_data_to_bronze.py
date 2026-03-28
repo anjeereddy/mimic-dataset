@@ -1,10 +1,10 @@
-from mimic_dataset.utils.spark_session import get_spark
+from mimic_dataset.utils.globals import GlobalVariables as G
 
 def ingest():
 
     schema_name = 'mimic_catalog'
     raw_data_location = 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/raw'
-    spark = _spark
+    spark = G.spark
 
     spark.sql("""
             CREATE DATABASE IF NOT EXISTS {schema_name}.bronze
