@@ -4,6 +4,7 @@ def execute_silver():
 
     schema_name = 'mimic_catalog'
 
+    spark = _spark
 
     df = spark.table("""
                 {schema_name}.bronze.admissions_raw    
