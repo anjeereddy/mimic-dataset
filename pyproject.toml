@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -33,4 +33,4 @@ where = ["src"]
 
 # Include non-code files
 [tool.setuptools.package-data]
-"" = ["resources/configs/**/*"]
+mimic_dataset = ["resources/configs/**/*"]
