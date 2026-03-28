@@ -2,7 +2,6 @@ from pyspark.sql.functions import col, floor, datediff
 from mimic_dataset.utils.globals import GlobalVariables as G
 
 def execute_silver():
-
     schema_name = 'mimic_catalog'
 
     spark = G.spark
@@ -64,19 +63,16 @@ def execute_silver():
     df_adm_clean.write.format("delta").mode("overwrite") \
         .saveAsTable(f"{schema_name}.silver.fact_admissions")
 
-
     df_adm_clean = df_adm_clean.withColumn(
         "length_of_stay_days",
         datediff(col("dischtime"), col("admittime"))
     )
-
 
     df_age = (
         df_adm_clean
             .join(df_pat_clean, "subject_id")
             .withColumn("age", floor(datediff(col("admittime"), col("dob")) / 365.25))
     )
-
 
     df_age = (
         df_adm_clean
