@@ -1,4 +1,5 @@
 from pyspark.sql.functions import col, floor, datediff
+from mimic_dataset.utils.spark_session import get_spark
 
 def execute_silver():
 

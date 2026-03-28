@@ -1,3 +1,4 @@
+from mimic_dataset.utils.spark_session import get_spark
 
 def ingest():
 
