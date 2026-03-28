@@ -8,3 +8,5 @@ def main(args=None):
 
     parameters = json.loads(args_json)
     print(parameters)
+
+    print("✅ Job Completed Successfully")
