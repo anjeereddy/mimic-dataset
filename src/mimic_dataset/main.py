@@ -11,8 +11,8 @@ def main(args=None):
     parameters = json.loads(args_json)
     print(parameters)
 
-    step = parameters["step"]
-
+    step = parameters["STEP"]
+    print(step)
     if step == "BRONZE_LOAD":
         ingest()
 
