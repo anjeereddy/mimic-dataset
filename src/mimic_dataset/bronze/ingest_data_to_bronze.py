@@ -1,32 +1,32 @@
 from mimic_dataset.utils.globals import GlobalVariables as G
 
-def ingest():
 
+def ingest():
     schema_name = 'mimic_catalog'
     raw_data_location = 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/raw'
     spark = G.spark
 
     spark.sql("""
             CREATE DATABASE IF NOT EXISTS {schema_name}.bronze
-            """.format(schema_name = schema_name))
+            """.format(schema_name=schema_name))
     spark.sql("""
             CREATE DATABASE IF NOT EXISTS {schema_name}.silver
-            """.format(schema_name = schema_name))
+            """.format(schema_name=schema_name))
     spark.sql("""
             CREATE DATABASE IF NOT EXISTS {schema_name}.gold
-            """.format(schema_name = schema_name))
+            """.format(schema_name=schema_name))
 
     # Drop table if exists
     spark.sql("""
               DROP TABLE IF EXISTS {schema_name}.bronze.raw_data
-              """.format(schema_name = schema_name))
+              """.format(schema_name=schema_name))
 
     # Create table using Delta format and external location
     spark.sql("""
-    CREATE TABLE {schema_name}.bronze.raw_data
-    USING DELTA
-    LOCATION 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/bronze_data'
-    """.format(schema_name = schema_name))
+        CREATE TABLE {schema_name}.bronze.raw_data
+        USING DELTA
+        LOCATION 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/bronze_data'
+    """.format(schema_name=schema_name))
 
     files = [
         "ADMISSIONS.csv", "ICUSTAYS.csv", "PATIENTS.csv", "LABEVENTS.csv",
@@ -38,6 +38,8 @@ def ingest():
         "OUTPUTEVENTS.csv", "PRESCRIPTIONS.csv", "PROCEDUREEVENTS_MV.csv",
         "PROCEDURES_ICD.csv", "SERVICES.csv", "TRANSFERS.csv"
     ]
+
+    print("Current User:", spark.sql("SELECT current_user()").collect())
 
     for f in files:
         table_name = f.replace(".csv", "").lower() + "_raw"
