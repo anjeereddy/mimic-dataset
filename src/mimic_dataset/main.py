@@ -4,6 +4,7 @@ import json
 from mimic_dataset.bronze.ingest_data_to_bronze import ingest
 from mimic_dataset.utils.globals import GlobalVariables as G
 from mimic_dataset.silver.transform_and_load_to_silver import execute_silver as silver
+from mimic_dataset.gold.load_to_gold import execute_gold as gold
 
 def main(args=None):
 
@@ -22,6 +23,8 @@ def main(args=None):
         ingest()
     elif step == "SILVER_TRASNFORM_LOAD":
         silver()
+    elif step == "GOLD_TRASNFORM_LOAD":
+        gold()
     print("✅ Job Completed Successfully")
 
 

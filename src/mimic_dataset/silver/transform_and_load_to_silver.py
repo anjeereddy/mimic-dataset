@@ -1,8 +1,10 @@
 from pyspark.sql.functions import col, floor, datediff
 from mimic_dataset.utils.globals import GlobalVariables as G
+from mimic_dataset.utils.file import load_config
 
 def execute_silver():
-    schema_name = 'mimic_catalog'
+    config, _ = load_config()
+    schema_name = config['schema_name']
 
     spark = G.spark
 
