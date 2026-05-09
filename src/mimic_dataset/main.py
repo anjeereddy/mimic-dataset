@@ -5,6 +5,7 @@ from mimic_dataset.bronze.ingest_data_to_bronze import ingest
 from mimic_dataset.utils.globals import GlobalVariables as G
 from mimic_dataset.silver.transform_and_load_to_silver import execute_silver as silver
 from mimic_dataset.gold.load_to_gold import execute_gold as gold
+from mimic_dataset.data_quality.quality_check import execute_quality_check as quality_check
 
 def main(args=None):
 
@@ -25,6 +26,8 @@ def main(args=None):
         silver()
     elif step == "GOLD_TRASNFORM_LOAD":
         gold()
+    elif step == "QUALITY_CHECK":
+        quality_check()
     print("✅ Job Completed Successfully")
 
 
