@@ -205,10 +205,22 @@ def execute_quality_check():
         total_issues += df_check12
         logger.info(f"✓ Check 12: Issue Count={df_check12}, Status={status12}")
 
-        # Write quality check results
+        # Write quality check results (enforce schema to avoid Delta merge conflicts)
         logger.info("\nWriting quality check results to table...")
         df_quality_checks = spark.createDataFrame(quality_checks)
-        df_quality_checks = df_quality_checks.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date())
+        # Cast columns explicitly to match target table schema
+        df_quality_checks = (df_quality_checks
+                             .withColumn("check_id", col("check_id").cast("int"))
+                             .withColumn("check_name", col("check_name").cast("string"))
+                             .withColumn("check_category", col("check_category").cast("string"))
+                             .withColumn("table_name", col("table_name").cast("string"))
+                             .withColumn("check_description", col("check_description").cast("string"))
+                             .withColumn("issue_count", col("issue_count").cast("long"))
+                             .withColumn("threshold_value", col("threshold_value").cast("string"))
+                             .withColumn("check_status", col("check_status").cast("string"))
+                             .withColumn("execution_timestamp", current_timestamp())
+                             .withColumn("execution_date", current_date()))
+        df_quality_checks = df_quality_checks.select("check_id", "check_name", "check_category", "table_name", "check_description", "issue_count", "threshold_value", "check_status", "execution_timestamp", "execution_date")
         df_quality_checks.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.quality_check_results")
         logger.info(f"✓ Wrote {len(quality_checks)} quality check results to table")
 
@@ -298,6 +310,18 @@ def execute_quality_check():
         }]
 
         df_summary = spark.createDataFrame(summary_data)
+        # Enforce schema types for summary table
+        df_summary = (df_summary
+                      .withColumn("run_id", col("run_id").cast("string"))
+                      .withColumn("execution_timestamp", col("execution_timestamp").cast("timestamp"))
+                      .withColumn("execution_date", col("execution_date").cast("date"))
+                      .withColumn("total_checks_executed", col("total_checks_executed").cast("int"))
+                      .withColumn("passed_checks", col("passed_checks").cast("int"))
+                      .withColumn("warning_checks", col("warning_checks").cast("int"))
+                      .withColumn("failed_checks", col("failed_checks").cast("int"))
+                      .withColumn("total_issues_found", col("total_issues_found").cast("long"))
+                      .withColumn("execution_duration_seconds", col("execution_duration_seconds").cast("int"))
+                      .withColumn("run_status", col("run_status").cast("string")))
         df_summary.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.quality_check_summary")
 
         logger.info(f"\n{'='*80}")
