@@ -232,12 +232,24 @@ def execute_quality_check():
         icustays_raw = spark.table(f"{schema_name}.bronze.icustays_raw")
         logger.info("Computing ICU admissions trends...")
         df_analytics1 = icustays_raw.withColumn("admission_year", year(col("intime"))).groupBy("admission_year").agg(count("*").alias("icu_admissions")).orderBy("admission_year")
-        df_analytics1_write = df_analytics1.withColumn("month", lit(None).cast(IntegerType())).withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date()).select("admission_year", "month", "icu_admissions", "execution_timestamp", "execution_date")
+        df_analytics1_write = (df_analytics1
+                               .withColumn("month", lit(None).cast(IntegerType()))
+                               .withColumn("admission_year", col("admission_year").cast("int"))
+                               .withColumn("icu_admissions", col("icu_admissions").cast("long"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date())
+                               .select("admission_year", "month", "icu_admissions", "execution_timestamp", "execution_date"))
         df_analytics1_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.icu_admissions_trends")
         logger.info("✓ Analytics 1 written to icu_admissions_trends table")
 
         df_analytics2 = icustays_raw.withColumn("year", year(col("intime"))).withColumn("month", month(col("intime"))).groupBy("year", "month").agg(count("*").alias("icu_admissions")).orderBy(col("icu_admissions").desc())
-        df_analytics2_write = df_analytics2.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date()).select("year", "month", "icu_admissions", "execution_timestamp", "execution_date")
+        df_analytics2_write = (df_analytics2
+                               .withColumn("year", col("year").cast("int"))
+                               .withColumn("month", col("month").cast("int"))
+                               .withColumn("icu_admissions", col("icu_admissions").cast("long"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date())
+                               .select("year", "month", "icu_admissions", "execution_timestamp", "execution_date"))
         df_analytics2_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.icu_admissions_trends")
         logger.info("✓ Analytics 2 written to icu_admissions_trends table")
 
@@ -247,7 +259,11 @@ def execute_quality_check():
         logger.info("=" * 80)
 
         df_analytics3 = spark.table(f"{schema_name}.silver.fact_icustays").groupBy("subject_id").agg(count("*").alias("icu_visits")).filter(col("icu_visits") > 1).orderBy(col("icu_visits").desc())
-        df_analytics3_write = df_analytics3.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date())
+        df_analytics3_write = (df_analytics3
+                               .withColumn("subject_id", col("subject_id").cast("int"))
+                               .withColumn("icu_visits", col("icu_visits").cast("long"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date()))
         df_analytics3_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.patient_icu_visits")
         logger.info(f"✓ Analytics 3 ({df_analytics3.count()} records) written to patient_icu_visits table")
 
@@ -256,7 +272,12 @@ def execute_quality_check():
         logger.info("=" * 80)
 
         df_analytics4 = admissions.join(spark.table(f"{schema_name}.silver.fact_icustays"), "hadm_id").groupBy("insurance", "admission_type").agg(count("*").alias("total_icu_readmissions")).orderBy(col("total_icu_readmissions").desc())
-        df_analytics4_write = df_analytics4.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date())
+        df_analytics4_write = (df_analytics4
+                               .withColumn("insurance", col("insurance").cast("string"))
+                               .withColumn("admission_type", col("admission_type").cast("string"))
+                               .withColumn("total_icu_readmissions", col("total_icu_readmissions").cast("long"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date()))
         df_analytics4_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.icu_readmissions_by_insurance")
         logger.info("✓ Analytics 4 written to icu_readmissions_by_insurance table")
 
@@ -269,7 +290,11 @@ def execute_quality_check():
             .withColumn("age", floor(datediff(col("intime"), col("dob")) / 365.25))
             .filter(col("age") >= 65).withColumn("year", year(col("intime")))
             .groupBy("year").agg(count("*").alias("elderly_icu_admissions")).orderBy("year"))
-        df_analytics5_write = df_analytics5.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date())
+        df_analytics5_write = (df_analytics5
+                               .withColumn("year", col("year").cast("int"))
+                               .withColumn("elderly_icu_admissions", col("elderly_icu_admissions").cast("long"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date()))
         df_analytics5_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.elderly_icu_admissions")
         logger.info("✓ Analytics 5 written to elderly_icu_admissions table")
 
@@ -282,7 +307,14 @@ def execute_quality_check():
             .agg(count("*").alias("total_cases"), spark_sum("hospital_expire_flag").alias("deaths"))
             .withColumn("mortality_rate", spark_round(col("deaths") / col("total_cases"), 2))
             .orderBy(col("mortality_rate").desc()))
-        df_analytics6_write = df_analytics6.withColumn("execution_timestamp", current_timestamp()).withColumn("execution_date", current_date()).select("admission_type", "total_cases", "deaths", "mortality_rate", "execution_timestamp", "execution_date")
+        df_analytics6_write = (df_analytics6
+                               .withColumn("admission_type", col("admission_type").cast("string"))
+                               .withColumn("total_cases", col("total_cases").cast("long"))
+                               .withColumn("deaths", col("deaths").cast("long"))
+                               .withColumn("mortality_rate", col("mortality_rate").cast("decimal(5,2)"))
+                               .withColumn("execution_timestamp", current_timestamp())
+                               .withColumn("execution_date", current_date())
+                               .select("admission_type", "total_cases", "deaths", "mortality_rate", "execution_timestamp", "execution_date"))
         df_analytics6_write.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(f"{schema_name}.data_quality.mortality_by_admission_type")
         logger.info("✓ Analytics 6 written to mortality_by_admission_type table")
 
