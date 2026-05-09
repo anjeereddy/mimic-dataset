@@ -23,12 +23,11 @@ def ingest():
               DROP TABLE IF EXISTS {schema_name}.bronze.raw_data
               """.format(schema_name=schema_name))
 
-    # Create table using Delta format and external location
-    spark.sql("""
-        CREATE TABLE {schema_name}.bronze.raw_data
+    # Create managed table using Delta format
+    spark.sql(f"""
+        CREATE TABLE IF NOT EXISTS {schema_name}.bronze.raw_data
         USING DELTA
-        LOCATION 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/bronze_data'
-    """.format(schema_name=schema_name))
+    """)
 
     files = [
         "ADMISSIONS.csv", "ICUSTAYS.csv", "PATIENTS.csv", "LABEVENTS.csv",
