@@ -1,4 +1,14 @@
 # Databricks notebook source
+# MAGIC %pip install langchain langchain-text-splitters
+# MAGIC %pip install databricks-genai-inference
+# MAGIC %pip install databricks-vectorsearch
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 spark.sql("SHOW TABLES IN mimic_catalog.silver").show()
 
 # COMMAND ----------
@@ -156,6 +166,20 @@ spark.read.table("mimic_catalog.gold.llm_embeddings").show()
 # COMMAND ----------
 
 # DBTITLE 1,Cell 23
+# Create endpoint if it doesn't exist
+endpoints = vsc.list_endpoints()
+endpoint_exists = any(
+    ep.get("name") == "mimic_vector_endpoint"
+    for ep in endpoints.get("endpoints", [])
+)
+
+if not endpoint_exists:
+    vsc.create_endpoint(name="mimic_vector_endpoint", endpoint_type="STANDARD")
+    vsc.wait_for_endpoint("mimic_vector_endpoint")
+    print("Endpoint created successfully.")
+else:
+    print("Endpoint already exists.")
+
 spark.sql("""
     ALTER TABLE mimic_catalog.gold.llm_embeddings
     SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
@@ -306,89 +330,3 @@ diseases = re.findall(r'\d+\.\s*(.*)', text)
 df = pd.DataFrame(diseases, columns=["Common Emergency Diagnoses"])
 
 display(df)
-
-# COMMAND ----------
-
-clean = [d.split("(")[0].strip() for d in diseases]
-
-df = pd.DataFrame(clean, columns=["Disease"])
-
-display(df)
-
-# COMMAND ----------
-
-def ask_mimic_bot_table(question):
-    answer = ask_mimic_bot(question)
-
-    diseases = re.findall(r'\d+\.\s*(.*)', answer)
-
-    df = pd.DataFrame(diseases, columns=["Result"])
-
-    display(df)
-
-# COMMAND ----------
-
-ask_mimic_bot_table("what diseases are frequently seen in emergency admissions?")
-
-# COMMAND ----------
-
-ask_mimic_bot("What heart-related conditions commonly lead to emergency admission?")
-
-# COMMAND ----------
-
-from databricks_genai_inference import ChatCompletion
-import pandas as pd
-import json
-
-def ask_mimic_bot_table(question):
-
-    query_response = Embedding.create(
-        model="databricks-bge-large-en",
-        input=[question]
-    )
-
-    query_vector = query_response.embeddings[0]
-
-    results = index.similarity_search(
-        query_vector=query_vector,
-        columns=["chunk_text"],
-        num_results=5
-    )
-
-    context = "\n".join([r[0] for r in results['result']['data_array']])
-
-    prompt = f"""
-    Answer the question using the context.
-
-    Context:
-    {context}
-
-    Question:
-    {question}
-
-    IMPORTANT:
-    Return the answer ONLY in JSON format like this:
-
-    {{
-      "results": [
-        {{"item": "value"}}
-      ]
-    }}
-    """
-
-    response = ChatCompletion.create(
-        model="databricks-meta-llama-3-3-70b-instruct",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    text = response.message
-
-    data = json.loads(text)
-
-    df = pd.DataFrame(data["results"])
-
-    display(df)
-
-# COMMAND ----------
-
-ask_mimic_bot_table("What infections are common in emergency hospital admissions?")

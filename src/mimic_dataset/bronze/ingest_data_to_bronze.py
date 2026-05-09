@@ -1,9 +1,11 @@
 from mimic_dataset.utils.globals import GlobalVariables as G
+from mimic_dataset.utils.file import load_config
 
 
 def ingest():
-    schema_name = 'mimic_catalog'
-    raw_data_location = 'abfss://df-mimic-data@azdatafactorydevadls.dfs.core.windows.net/raw'
+    config, _ = load_config()
+    schema_name = config['schema_name']
+    raw_data_location = config['raw_data_location']
     spark = G.spark
 
     spark.sql("""

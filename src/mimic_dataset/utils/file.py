@@ -3,7 +3,7 @@ import json
 from importlib import resources
 
 
-def load_config(env):
+def load_config(env="dev"):
     # Path inside package
     config_path = f"resources/configs/{env}/config.yaml"
 
