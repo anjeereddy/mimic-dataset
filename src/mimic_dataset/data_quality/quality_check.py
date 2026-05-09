@@ -128,7 +128,8 @@ def execute_quality_check():
 
         # Check 7: Missing patient reference
         logger.info("Executing Check 7: Missing patient reference")
-        df_check7 = icu_stays.join(patients, "subject_id", "left").filter(col("patients.subject_id").isNull()).count()
+        patients_alias = patients.withColumnRenamed("subject_id", "patient_subject_id").withColumnRenamed("dob", "patient_dob")
+        df_check7 = icu_stays.join(patients_alias, icu_stays["subject_id"] == patients_alias["patient_subject_id"], "left").filter(col("patient_dob").isNull()).count()
         status7 = "PASS" if df_check7 == 0 else "FAIL"
         quality_checks.append({"check_id": 7, "check_name": "missing_patient_reference", "check_category": "ICU_STAYS", "table_name": f"{schema_name}.silver.fact_icustays", "check_description": "Check for missing patient references", "issue_count": df_check7, "threshold_value": None, "check_status": status7})
         passed_checks += 1 if status7 == "PASS" else 0
@@ -138,7 +139,8 @@ def execute_quality_check():
 
         # Check 8: Missing admission reference
         logger.info("Executing Check 8: Missing admission reference")
-        df_check8 = icu_stays.join(admissions, "hadm_id", "left").filter(col("admissions.hadm_id").isNull()).count()
+        admissions_alias = admissions.withColumnRenamed("hadm_id", "admission_hadm_id").withColumnRenamed("admittime", "admission_admittime")
+        df_check8 = icu_stays.join(admissions_alias, icu_stays["hadm_id"] == admissions_alias["admission_hadm_id"], "left").filter(col("admission_admittime").isNull()).count()
         status8 = "PASS" if df_check8 == 0 else "FAIL"
         quality_checks.append({"check_id": 8, "check_name": "missing_admission_reference", "check_category": "ICU_STAYS", "table_name": f"{schema_name}.silver.fact_icustays", "check_description": "Check for missing admission references", "issue_count": df_check8, "threshold_value": None, "check_status": status8})
         passed_checks += 1 if status8 == "PASS" else 0
