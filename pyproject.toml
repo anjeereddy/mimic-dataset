@@ -16,7 +16,12 @@ dependencies = [
     "setuptools~=78.1.1",
     "pytest",
     "pytest-cov",
-    "databricks-cli"
+    "databricks-cli",
+    "databricks-genai-inference>=0.1.0",
+    "databricks-vectorsearch>=0.1.0",
+    "langchain-text-splitters>=0.1.0",
+    "pandas>=1.0.0",
+    "pyspark>=3.0.0"
 ]
 
 # Entry point (FIXED - very important)
