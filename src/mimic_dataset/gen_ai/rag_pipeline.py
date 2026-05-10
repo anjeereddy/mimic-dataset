@@ -29,7 +29,7 @@ import time
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any, List, Optional
 
 import pandas as pd
 from pyspark.sql.functions import concat_ws
@@ -39,13 +39,14 @@ from databricks.vector_search.client import VectorSearchClient
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from mimic_dataset.utils.globals import GlobalVariables as G
+from mimic_dataset.utils.file import load_config
 
 
 # ============================================================================
 # PHASE 1: DATA FOUNDATION - Create Documents from MIMIC Silver Tables
 # ============================================================================
 
-def create_llm_documents(schema_name: str = "mmc") -> None:
+def create_llm_documents(schema_name: Optional[str] = None) -> None:
     """
     Load patient admissions from MIMIC silver layer and create documents.
 
@@ -61,6 +62,11 @@ def create_llm_documents(schema_name: str = "mmc") -> None:
     Raises:
         Exception: If Spark tables are not accessible
     """
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
+
     spark = G.spark
 
     # Read fact admissions table from silver layer
@@ -85,7 +91,7 @@ def create_llm_documents(schema_name: str = "mmc") -> None:
 # PHASE 2: INTELLIGENT CHUNKING - Split Documents into Chunks
 # ============================================================================
 
-def chunk_documents(schema_name: str = "mmc", chunk_size: int = 200, chunk_overlap: int = 20) -> None:
+def chunk_documents(schema_name: Optional[str] = None, chunk_size: int = 200, chunk_overlap: int = 20) -> None:
     """
     Split documents into manageable chunks using LangChain.
 
@@ -103,6 +109,11 @@ def chunk_documents(schema_name: str = "mmc", chunk_size: int = 200, chunk_overl
     Raises:
         Exception: If llm_documents table doesn't exist
     """
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
+
     spark = G.spark
 
     # Read documents from gold layer
@@ -132,7 +143,7 @@ def chunk_documents(schema_name: str = "mmc", chunk_size: int = 200, chunk_overl
 # ============================================================================
 
 def generate_embeddings(
-    schema_name: str = "mmc",
+    schema_name: Optional[str] = None,
     model: str = "databricks-bge-large-en",
     batch_size: int = 20,
     rate_limit_sleep: float = 1.0
@@ -155,6 +166,11 @@ def generate_embeddings(
     Raises:
         Exception: If embedding API is not accessible
     """
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
+
     spark = G.spark
 
     # Read chunks from gold layer
@@ -196,7 +212,7 @@ def generate_embeddings(
 # ============================================================================
 
 def create_vector_search_index(
-    schema_name: str = "mmc",
+    schema_name: Optional[str] = None,
     endpoint_name: str = "mimic_vector_endpoint",
     index_name: str = None
 ) -> VectorSearchClient:
@@ -217,6 +233,11 @@ def create_vector_search_index(
     Raises:
         Exception: If vector search service is unavailable
     """
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
+
     if index_name is None:
         index_name = f"{schema_name}.gold.mimic_llm_index"
 
@@ -519,7 +540,7 @@ Answer clearly and helpfully.
 
 def get_patient_summary(
     subject_id: int,
-    schema_name: str = "mmc"
+    schema_name: Optional[str] = None
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Fetch patient admissions and ICU stays from MIMIC silver tables.
@@ -534,6 +555,11 @@ def get_patient_summary(
     Raises:
         Exception: If patient not found or tables inaccessible
     """
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
+
     spark = G.spark
 
     # Query admissions
@@ -825,7 +851,7 @@ def send_prescription_email(
 # ============================================================================
 
 def execute_rag_pipeline(
-    schema_name: str = "mmc",
+    schema_name: Optional[str] = None,
     skip_embedding_generation: bool = False
 ) -> Dict[str, Any]:
     """
@@ -852,6 +878,11 @@ def execute_rag_pipeline(
     print("\n" + "="*70)
     print("🚀 MIMIC RAG PIPELINE EXECUTION")
     print("="*70)
+
+    # get schema from config if not provided
+    if not schema_name:
+        config, _ = load_config()
+        schema_name = config["schema_name"]
 
     try:
         # Phase 1: Create documents
