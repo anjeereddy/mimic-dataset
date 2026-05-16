@@ -45,7 +45,17 @@ jobs:
       - name: Upload to Databricks Volume
         run: |
           databricks fs cp dist/*.whl \
-            dbfs:/Volumes/training_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
+            dbfs:/Volumes/mimic_catalog/dbx_volumes/dbx-volume-artifacts/mimic-artifact/ \
+            --overwrite
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      - name: Deploy notebook
+        run: |
+          databricks workspace import notebooks/MIMIC_RAG_Pipeline.py \
+            /Workspace/data-engineering/mimic_dataset/MIMIC_RAG_Pipeline \
+            --language PYTHON \
             --overwrite
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
