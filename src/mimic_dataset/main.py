@@ -9,17 +9,24 @@ Main entry point for executing MIMIC dataset ETL pipeline steps:
 - RAG_PIPELINE: Initialize RAG pipeline for Gen-AI capabilities
 
 Usage:
-    python -m mimic_dataset.main '{"STEP": "BRONZE_LOAD"}'
-    python -m mimic_dataset.main '{"STEP": "SILVER_TRANSFORM_LOAD"}'
-    python -m mimic_dataset.main '{"STEP": "QUALITY_CHECK"}'
-    python -m mimic_dataset.main '{"STEP": "GOLD_TRANSFORM_LOAD"}'
-    python -m mimic_dataset.main '{"STEP": "RAG_PIPELINE"}'
+    python -m mimic_dataset.main --STEP BRONZE_LOAD
+    python -m mimic_dataset.main --STEP SILVER_TRANSFORM_LOAD
+    python -m mimic_dataset.main --STEP QUALITY_CHECK
+    python -m mimic_dataset.main --STEP GOLD_TRANSFORM_LOAD
+    python -m mimic_dataset.main --STEP RAG_PIPELINE
+
+    From Databricks Jobs:
+    ["--STEP","BRONZE_LOAD"]
+    ["--STEP","SILVER_TRANSFORM_LOAD"]
+    ["--STEP","QUALITY_CHECK"]
+    ["--STEP","GOLD_TRANSFORM_LOAD"]
+    ["--STEP","RAG_PIPELINE"]
 """
 
 import sys
-import json
+import argparse
 import logging
-from typing import Dict, Any
+from typing import Optional
 
 from mimic_dataset.bronze.ingest_data_to_bronze import ingest
 from mimic_dataset.utils.globals import GlobalVariables as G
@@ -46,24 +53,19 @@ VALID_STEPS = {
 }
 
 
-def validate_parameters(parameters: Dict[str, Any]) -> str:
+def validate_parameters(step: str) -> str:
     """
-    Validate input parameters.
+    Validate STEP parameter.
 
     Args:
-        parameters (Dict[str, Any]): Input parameters dictionary
+        step (str): STEP parameter value
 
     Returns:
         str: Validated STEP parameter
 
     Raises:
-        KeyError: If STEP key is missing
         ValueError: If STEP value is invalid
     """
-    if "STEP" not in parameters:
-        raise KeyError("Missing required parameter: 'STEP'")
-
-    step = parameters["STEP"]
 
     if step not in VALID_STEPS:
         raise ValueError(
@@ -74,13 +76,13 @@ def validate_parameters(parameters: Dict[str, Any]) -> str:
     return step
 
 
-def main(args: str = None) -> None:
+def main(step: Optional[str] = None) -> None:
     """
     Orchestrate MIMIC ETL pipeline execution.
 
     Args:
-        args (str, optional): JSON string with execution parameters.
-                             If not provided, reads from command-line argument.
+        step (Optional[str]): STEP parameter value.
+                             If not provided, parses from command-line arguments.
 
     Raises:
         SystemExit: On validation errors or execution failures
@@ -101,39 +103,55 @@ def main(args: str = None) -> None:
         logger.info(f"✓ Schema: {config.get('schema_name')}")
         logger.info(f"✓ Data location: {config.get('raw_data_location')}")
 
-        # Parse input parameters
+        # Parse command-line arguments
         logger.info("📌 Parsing execution parameters...")
-        args_json = sys.argv[1] if args is None else args
-        logger.debug(f"Raw arguments: {args_json}")
+        parser = argparse.ArgumentParser(
+            description="MIMIC Dataset ETL Pipeline Orchestrator",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  python -m mimic_dataset.main --STEP BRONZE_LOAD
+  python -m mimic_dataset.main --STEP SILVER_TRANSFORM_LOAD
+  python -m mimic_dataset.main --STEP QUALITY_CHECK
+  python -m mimic_dataset.main --STEP GOLD_TRANSFORM_LOAD
+  python -m mimic_dataset.main --STEP RAG_PIPELINE
+            """
+        )
+        parser.add_argument(
+            "--STEP",
+            type=str,
+            required=step is None,
+            help="Pipeline step to execute (BRONZE_LOAD, SILVER_TRANSFORM_LOAD, QUALITY_CHECK, GOLD_TRANSFORM_LOAD, RAG_PIPELINE)"
+        )
 
-        parameters = json.loads(args_json)
-        logger.info(f"✓ Parameters received: {parameters}")
+        # Parse arguments if step not provided
+        if step is None:
+            args = parser.parse_args()
+            step = args.STEP
+
+        logger.info(f"✓ Parameters received: STEP={step}")
 
         # Validate and extract step
-        step = validate_parameters(parameters)
-        logger.info(f"📌 Executing step: {step}")
+        validated_step = validate_parameters(step)
+        logger.info(f"📌 Executing step: {validated_step}")
 
         # Execute the requested step
         logger.info("📌 Starting pipeline step execution...")
-        VALID_STEPS[step]()
+        VALID_STEPS[validated_step]()
 
         logger.info("=" * 80)
         logger.info("✅ Job Completed Successfully")
         logger.info("=" * 80)
 
-    except KeyError as e:
-        logger.error(f"❌ Parameter validation error: {e}")
-        logger.error("Expected format: '{\"STEP\": \"BRONZE_LOAD|SILVER_TRANSFORM_LOAD|QUALITY_CHECK|GOLD_TRANSFORM_LOAD|RAG_PIPELINE\"}'")
-        sys.exit(1)
-
-    except json.JSONDecodeError as e:
-        logger.error(f"❌ JSON parsing error: {e}")
-        logger.error("Please provide valid JSON string as argument")
-        sys.exit(1)
-
     except ValueError as e:
         logger.error(f"❌ Invalid parameter value: {e}")
         sys.exit(1)
+
+    except SystemExit as e:
+        # argparse calls sys.exit on error, re-raise it
+        if e.code != 0:
+            logger.error(f"❌ Argument parsing failed")
+        raise
 
     except Exception as e:
         logger.error(f"❌ Pipeline execution failed: {type(e).__name__}: {e}", exc_info=True)
