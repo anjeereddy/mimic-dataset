@@ -1,2 +1,2 @@
-schema_name: 'mimic_catalog'
-raw_data_location: 'abfss://landing@valaxystrgaccv2.dfs.core.windows.net/mimic_catalog'
+schema_name: 'dmcat'
+raw_data_location: 'abfss://landing@valaxystrgaccv2.dfs.core.windows.net/raw'
