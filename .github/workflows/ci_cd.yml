@@ -54,7 +54,7 @@ jobs:
       - name: Deploy notebook
         run: |
           databricks workspace import /Workspace/data-engineering/mimic_dataset/MIMIC_RAG_Pipeline \
-            --file notebooks/MIMIC_RAG_Pipeline.py \
+            --file src/notebooks/MIMIC_RAG_Pipeline.py \
             --language PYTHON \
             --overwrite
         env:
