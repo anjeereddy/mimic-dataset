@@ -7,7 +7,7 @@ name = "mimic_dataset"
 version = "0.1.2"
 description = "Mimic patients analysis python project."
 authors = [
-    { name = "Anji" }
+    { name = "Ram" }
 ]
 
 dependencies = [
