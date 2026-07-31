@@ -23,7 +23,6 @@ dependencies = [
     "pandas>=1.0.0",
     "pyspark>=3.0.0"
 ]
-
 # Entry point (FIXED - very important)
 [project.scripts]
 run = "mimic_dataset.main:main"
