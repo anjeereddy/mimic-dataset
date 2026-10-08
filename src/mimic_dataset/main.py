@@ -34,7 +34,7 @@ from mimic_dataset.utils.file import load_config
 from mimic_dataset.silver.transform_and_load_to_silver import execute_silver as silver
 from mimic_dataset.gold.load_to_gold import execute_gold as gold
 from mimic_dataset.data_quality.quality_check import execute_quality_check as quality_check
-from mimic_dataset.gen_ai.rag_pipeline import execute_rag_pipeline as rag_pipeline
+# from mimic_dataset.gen_ai.rag_pipeline import execute_rag_pipeline as rag_pipeline
 
 # Configure logging
 logging.basicConfig(
@@ -48,8 +48,8 @@ VALID_STEPS = {
     "BRONZE_LOAD": ingest,
     "SILVER_TRANSFORM_LOAD": silver,
     "QUALITY_CHECK": quality_check,
-    "GOLD_TRANSFORM_LOAD": gold,
-    "RAG_PIPELINE": rag_pipeline
+    "GOLD_TRANSFORM_LOAD": gold
+#     "RAG_PIPELINE": rag_pipeline
 }
 
 
