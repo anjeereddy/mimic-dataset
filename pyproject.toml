@@ -13,15 +13,18 @@ authors = [
 dependencies = [
     "databricks-sdk",
     "PyYAML==6.0.2",
-    "setuptools~=78.1.1",
-    "pytest",
-    "pytest-cov",
     "databricks-cli",
     "databricks-genai-inference>=0.1.0",
     "databricks-vectorsearch>=0.1.0",
     "langchain-text-splitters>=0.1.0",
     "pandas>=1.0.0",
     "pyspark>=3.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov"
 ]
 # Entry point (FIXED - very important)
 [project.scripts]
