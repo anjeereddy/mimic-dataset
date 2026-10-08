@@ -1,5 +1,4 @@
 name: Build and Deploy WHL
-
 on:
   push:
     branches: [ main ]
@@ -45,7 +44,7 @@ jobs:
       - name: Upload to Databricks Volume
         run: |
           databricks fs cp dist/*.whl \
-            dbfs:/Volumes/dmcat/dmschema/mimic_dataset/mimic-artifact/ \
+            dbfs:/Volumes/valaxy_db_pass/demo_schema/dmcat/mimic_dataset/mimic-artifact/ \
             --overwrite
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
