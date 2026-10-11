@@ -1,2 +1,2 @@
-schema_name: 'valaxy_db_pass'
-raw_data_location: 'abfss://landing@ade02newval.dfs.core.windows.net/raw'
+schema_name: 'dmcat'
+raw_data_location: 'abfss://landing@ade02storage.dfs.core.windows.net/raw'
