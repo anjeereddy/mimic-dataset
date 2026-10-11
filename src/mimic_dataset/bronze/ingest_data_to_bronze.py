@@ -41,8 +41,7 @@ def ingest():
     ]
 
     print("Current User:", spark.sql("SELECT current_user()").collect())
-    spark.sql("SELECT current_user()").show()
-    spark.conf.get("fs.azure.account.key.ade02newval.dfs.core.windows.net", None)
+
     for f in files:
         table_name = f.replace(".csv", "").lower() + "_raw"
 
@@ -50,6 +49,8 @@ def ingest():
               .option("header", "true")
               .option("inferSchema", "true")
               .csv(f"{raw_data_location}/{f}"))
+        df.display()
+        print("===== Read is successful =====")
 
         (df.write
          .format("delta")
